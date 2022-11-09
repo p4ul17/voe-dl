@@ -8,6 +8,31 @@ from bs4 import BeautifulSoup
 
 os.chdir(os.path.dirname(os.path.abspath(__file__))) #change directory to the exact path the script is located in
 
+def main():
+    args = sys.argv #saving the cli arguments into args 
+
+    try:
+        args[1]     #try if args has a value at index 1
+    except IndexError:
+        print("Please use a parameter. Use -h for Help") #if not, tells the user to specify an argument
+        quit()
+
+    if args[1] == "-h":     #if the first user argument is "-h" call the help function
+        help()
+    elif args[1] == "-u":   #if the first user argument is "-u" call the download function
+        URL = args[2]
+        download(URL)
+    else:
+        URL = args[1]       #if the first user argument is the <URL> call the download function
+        download(URL)
+
+def help():
+    print("Arguments:")
+    print("-h shows this help")
+    print("-u <URL> downloads the <URL> you specify")
+    print("<URL> just the URL as Argument works the same as with -u Argument")
+
+
 def download(URL):
     URL = str(URL)
     html_page = requests.get(URL)
@@ -40,5 +65,4 @@ def download(URL):
     print("\n")
 
 if __name__ == "__main__":
-    URL = sys.argv[1]
-    download(URL)
+    main()
