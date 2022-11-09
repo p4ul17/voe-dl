@@ -11,7 +11,10 @@ A Python downloader for voe.sx videos
 3. use the:
 
 ### Single File Downloader
-    python dl.py [URL]
+```
+python dl.py [URL]
+python dl.py -u [URL]
+```
    
   whereas [URL] is the Link to the voe site\
   just downloads the link you specify
