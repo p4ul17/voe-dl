@@ -22,6 +22,9 @@ def main():
     elif args[1] == "-u":   #if the first user argument is "-u" call the download function
         URL = args[2]
         download(URL)
+    elif args[1] == "-l":   #if the first user argument is "-l" call the list_dl (list download) function
+        doc = args[2]
+        list_dl(doc)
     else:
         URL = args[1]       #if the first user argument is the <URL> call the download function
         download(URL)
@@ -30,8 +33,18 @@ def help():
     print("Arguments:")
     print("-h shows this help")
     print("-u <URL> downloads the <URL> you specify")
+    print("-l <doc> opens the <doc> you specify and downloads every URL line after line")
     print("<URL> just the URL as Argument works the same as with -u Argument")
 
+def list_dl(doc):
+    curLink = 0
+    lines = open(doc).readlines()       #reads the lines of the given document and store them in the list "lines"
+    for link in lines:                  #calls the download function for every link in the document
+        curLink +=1
+        print("Download %s / "%curLink + str(len(lines)))
+        link = link.replace("\n","")
+        print("echo Link: %s"%link)
+        download(link)
 
 def download(URL):
     URL = str(URL)
@@ -61,7 +74,7 @@ def download(URL):
     source_json = json.loads(source) #parsing the JSON 
     link = source_json["mp4"] #extracting the link to the mp4 file
     print(name)
-    wget.download(link, out=f"output/{name}.mp4") #downloading the file
+    wget.download(link, out=f"{name}.mp4") #downloading the file
     print("\n")
 
 if __name__ == "__main__":
