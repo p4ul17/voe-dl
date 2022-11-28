@@ -8,6 +8,8 @@ A Python downloader for voe.sx videos
    > bs4  (BeatifulSoup) 
    
    > wget
+   
+   > requests
 3. use the:
 
 ### Single File Downloader
