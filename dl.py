@@ -48,6 +48,9 @@ def list_dl(doc):
 
 def download(URL):
     URL = str(URL)
+    URL = URL.replace("/e", "") # replaces /e in the URL with an empty String 
+                                # to make dowloading an embedded URL possible
+
     html_page = requests.get(URL)
     soup = BeautifulSoup(html_page.content, 'html.parser')
 
