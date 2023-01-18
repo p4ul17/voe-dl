@@ -3,19 +3,14 @@ A Python downloader for voe.sx videos
 
 
 # Usage
-1. Download the Repo
-2. install dependencies via pip
-   > bs4  (BeatifulSoup) 
-   
-   > wget
-   
-   > requests
+1. Download the latest Release
+2. add the executable to PATH (just search for how to do it if you don't know)
 3. use the:
 
 ### Single File Downloader
 ```
-python dl.py [URL]
-python dl.py -u [URL]
+voe-dl [URL]
+voe-dl -u [URL]
 ```
    
   whereas [URL] is the Link to the voe site\
@@ -31,7 +26,7 @@ https://voe.sx//zzzzzzz
 ```
   execute
 ```
-python dl.py -l [File_Name]
+voe-dl -l [File_Name]
 ```
   It will download the links one after another
   
@@ -41,6 +36,6 @@ The Output Video Files will be saved in the folder you execute the script
 # Help
 execute
 ```
-python dl.py -h
+voe-dl -h
 ```
 for help directly from the script
