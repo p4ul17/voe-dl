@@ -1,4 +1,3 @@
-import os
 import sys
 import re
 import requests
@@ -6,10 +5,9 @@ import json
 import wget
 from bs4 import BeautifulSoup
 
-os.chdir(os.path.dirname(os.path.abspath(__file__))) #change directory to the exact path the script is located in
 
 def main():
-    args = sys.argv #saving the cli arguments into args 
+    args = sys.argv #saving the cli arguments into args
 
     try:
         args[1]     #try if args has a value at index 1
@@ -48,7 +46,7 @@ def list_dl(doc):
 
 def download(URL):
     URL = str(URL)
-    URL = URL.replace("e/", "") # replaces /e in the URL with an empty String
+    URL = URL.replace("/e/", "/") # replaces /e in the URL with an empty String
                                 # to make dowloading an embedded URL possible
 
     html_page = requests.get(URL)
@@ -60,7 +58,7 @@ def download(URL):
 
     sources_find = soup.find_all(string = re.compile("const sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
-    slice_start = sources_find.index("const sources") 
+    slice_start = sources_find.index("const sources")
     source = sources_find[slice_start:] #cutting everything before 'const sources' in the script tag
     slice_end = source.index(";")
     source = source[:slice_end] #cutting everything after ';' in the remaining String to make it ready for the JSON parser
@@ -74,7 +72,7 @@ def download(URL):
     replacementStr = ""
     source = replacementStr.join(source.rsplit(strToReplace, 1)) #complicated but needed replacement of the last comma in the source String to make it JSON valid
 
-    source_json = json.loads(source) #parsing the JSON 
+    source_json = json.loads(source) #parsing the JSON
     link = source_json["mp4"] #extracting the link to the mp4 file
     print(name)
     wget.download(link, out=f"{name}.mp4") #downloading the file
