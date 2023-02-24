@@ -56,14 +56,15 @@ def download(URL):
     name = name_find.text
     name = name.replace(" ","")
 
-    sources_find = soup.find_all(string = re.compile("const sources")) #searching for the script tag containing the link to the mp4
+    sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
-    slice_start = sources_find.index("const sources")
+    #slice_start = sources_find.index("const sources")
+    slice_start = sources_find.index("var sources")
     source = sources_find[slice_start:] #cutting everything before 'const sources' in the script tag
     slice_end = source.index(";")
     source = source[:slice_end] #cutting everything after ';' in the remaining String to make it ready for the JSON parser
 
-    source = source.replace("const sources = ","")    #
+    source = source.replace("var sources = ","")    #
     source = source.replace("\'","\"")                #Making the JSON valid
     source = source.replace("\\n","")                 #
     source = source.replace("\\","")                  #
@@ -71,6 +72,8 @@ def download(URL):
     strToReplace = ","
     replacementStr = ""
     source = replacementStr.join(source.rsplit(strToReplace, 1)) #complicated but needed replacement of the last comma in the source String to make it JSON valid
+
+    print(source)
 
     source_json = json.loads(source) #parsing the JSON
     link = source_json["mp4"] #extracting the link to the mp4 file
