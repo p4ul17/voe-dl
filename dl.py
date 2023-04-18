@@ -4,6 +4,7 @@ import requests
 import json
 import wget
 from bs4 import BeautifulSoup
+from yt_dlp import YoutubeDL
 
 
 def main():
@@ -73,12 +74,21 @@ def download(URL):
     replacementStr = ""
     source = replacementStr.join(source.rsplit(strToReplace, 1)) #complicated but needed replacement of the last comma in the source String to make it JSON valid
 
-    print(source)
-
     source_json = json.loads(source) #parsing the JSON
-    link = source_json["mp4"] #extracting the link to the mp4 file
-    print(name)
-    wget.download(link, out=f"{name}.mp4") #downloading the file
+    try:
+        link = source_json["mp4"] #extracting the link to the mp4 file
+        print(name)
+        wget.download(link, out=f"{name}.mp4") #downloading the file
+    except KeyError:
+        try:
+            link = source_json["hls"]
+            with YoutubeDL() as ydl:
+                ydl.download(link)
+
+        except KeyError:
+            print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl, and i so file an issue on GitHub.")
+            quit()
+    
     print("\n")
 
 if __name__ == "__main__":
