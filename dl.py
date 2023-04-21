@@ -1,4 +1,4 @@
-import sys
+import sys, os, glob
 import re
 import requests
 import json
@@ -55,7 +55,7 @@ def download(URL):
 
     name_find = soup.find("h1",class_="mt-1")  #parsing h1 tag for name of the mp4 file
     name = name_find.text
-    name = name.replace(" ","")
+    name = name.replace(" ","_")
 
     sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
@@ -82,14 +82,24 @@ def download(URL):
     except KeyError:
         try:
             link = source_json["hls"]
-            with YoutubeDL() as ydl:
+            name = name +'SS.mp4'
+            print(name)
+
+            ydl_opts = {'outtmpl' : name,}
+            with YoutubeDL(ydl_opts) as ydl:
                 ydl.download(link)
+            delpartfiles()
 
         except KeyError:
             print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl, and i so file an issue on GitHub.")
             quit()
     
     print("\n")
+
+def delpartfiles():
+    path = os.getcwd()
+    for file in glob.iglob(os.path.join(path, '*.part')):
+        os.remove(file)
 
 if __name__ == "__main__":
     main()
