@@ -5,7 +5,7 @@ import json
 import wget
 from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
-
+import base64
 
 def main():
     args = sys.argv #saving the cli arguments into args
@@ -65,28 +65,20 @@ def download(URL):
     sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
     #slice_start = sources_find.index("const sources")
-    slice_start = sources_find.index("var sources")
-    source = sources_find[slice_start:] #cutting everything before 'var sources' in the script tag
-    slice_end = source.index(";")
-    source = source[:slice_end] #cutting everything after ';' in the remaining String to make it ready for the JSON parser
-
-    source = source.replace("var sources = ","")    #
-    source = source.replace("\'","\"")                #Making the JSON valid
-    source = source.replace("\\n","")                 #
-    source = source.replace("\\","")                  #
-
-    strToReplace = ","
-    replacementStr = ""
-    source = replacementStr.join(source.rsplit(strToReplace, 1)) #complicated but needed replacement of the last comma in the source String to make it JSON valid
-
-    source_json = json.loads(source) #parsing the JSON
+    
+    jsSource = soup.select("script")[-4].text.strip()
+    slice_start = jsSource.find("'")+1
+    jsonText = jsSource[slice_start:jsSource.find("'",slice_start)]
+    
+    jsonText = base64.b64decode(jsonText)
+    source_json = json.loads(jsonText) #parsing the JSON
     try:
         link = source_json["mp4"] #extracting the link to the mp4 file
         print(name)
         wget.download(link, out=f"{name}.mp4") #downloading the file
     except KeyError:
         try:
-            link = source_json["hls"]
+            link = source_json["file"]
             name = name +'_SS.mp4'
 
             ydl_opts = {'outtmpl' : name,}
