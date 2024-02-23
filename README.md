@@ -1,6 +1,10 @@
 # voe-dl
 A Python downloader for voe.sx videos
 
+# Warning
+
+**Please use always the newest Version, because these suckers at voe change their site from time to time
+to make it harder for us to download via script!**
 
 # Usage
 1. Download the latest Release

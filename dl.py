@@ -29,7 +29,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.1.0")
+    print("Version v1.2.0")
     print("")
     print("______________")
     print("Arguments:")
@@ -69,7 +69,6 @@ def download(URL):
     jsSource = soup.select("script")[-4].text.strip()
     slice_start = jsSource.find("'")+1
     jsonText = jsSource[slice_start:jsSource.find("'",slice_start)]
-    
     jsonText = base64.b64decode(jsonText)
     source_json = json.loads(jsonText) #parsing the JSON
     try:
@@ -87,7 +86,7 @@ def download(URL):
             delpartfiles()
 
         except KeyError:
-            print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl, and if so file an issue on GitHub.")
+            print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl! , and if so file an issue on GitHub.")
             quit()
     
     print("\n")
