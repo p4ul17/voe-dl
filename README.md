@@ -5,6 +5,9 @@ A Python downloader for voe.sx videos
 
 **Please use always the newest Version, because these suckers at voe change their site from time to time
 to make it harder for us to download via script!**
+Testvideo to test while bugfixing:
+https://voe.sx/goxiq0lhtf67
+https://voe.sx/e/goxiq0lhtf67  for embedded Videos
 
 # Usage
 1. Download the latest Release

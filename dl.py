@@ -29,7 +29,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.2.0")
+    print("Version v1.2.1")
     print("")
     print("______________")
     print("Arguments:")
@@ -61,13 +61,8 @@ def download(URL):
     name = name[:slice_end]
     name = name.replace(" ","_")
     print(name)
-
-    sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
-    sources_find = str(sources_find)
-    #slice_start = sources_find.index("const sources")
     
-    jsSource = soup.find_all(string = re.compile(r"let .* = '.*';"))
-    jsSource = str(sources_find)
+    jsSource = soup.find(string = re.compile(r"let .* = '.*';")) #searching for the script tag containing the encrypted json
     slice_start = jsSource.find("'")
     slice_end = jsSource.rfind("'")
     jsonText = jsSource[slice_start + 1:slice_end]
@@ -80,7 +75,7 @@ def download(URL):
     except KeyError:
         try:
             link = source_json["file"]
-            name = name +'_SS.mp4'
+            name = name +'_SS.mp4' #superspeed
 
             ydl_opts = {'outtmpl' : name,}
             with YoutubeDL(ydl_opts) as ydl:
