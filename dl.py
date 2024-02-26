@@ -62,11 +62,15 @@ def download(URL):
     name = name.replace(" ","_")
     print(name)
 
-    sources_find = soup.find_all(string = re.compile(r"let .* = '.*';"))
+    sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
-    slice_start = sources_find.find("'")
-    slice_end = sources_find.rfind("'")
-    jsonText = sources_find[slice_start + 1:slice_end]
+    #slice_start = sources_find.index("const sources")
+    
+    jsSource = soup.find_all(string = re.compile(r"let .* = '.*';"))
+    jsSource = str(sources_find)
+    slice_start = jsSource.find("'")
+    slice_end = jsSource.rfind("'")
+    jsonText = jsSource[slice_start + 1:slice_end]
     jsonText = base64.b64decode(jsonText)[::-1]
     source_json = json.loads(jsonText) #parsing the JSON
     try:
