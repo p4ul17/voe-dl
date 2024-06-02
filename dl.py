@@ -51,7 +51,7 @@ def list_dl(doc):
 def download(URL):
     URL = str(URL)
 
-    html_page = requests.get(URL)
+    html_page = requests.get(URL, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"})
     soup = BeautifulSoup(html_page.content, 'html.parser')
 
     name_find = soup.find("title").text
@@ -82,6 +82,8 @@ def download(URL):
     source_json = json.loads(source) #parsing the JSON
     try:
         link = source_json["mp4"] #extracting the link to the mp4 file
+        link = base64.b64decode(link)
+        link = link.decode("utf-8")
         print(name)
         wget.download(link, out=f"{name}.mp4") #downloading the file
     except KeyError:
