@@ -53,8 +53,22 @@ def download(URL):
 
     html_page = requests.get(URL)
     soup = BeautifulSoup(html_page.content, 'html.parser')
+    if html_page.text.startswith("<script>"):
+        print(soup)
+        STARTMARKER = "window.location.href = '"
+        i0 = html_page.text.find(STARTMARKER)
+        i1 = html_page.text.find("'",i0+len(STARTMARKER))
+        print("find",i0,html_page.text[i0+len(STARTMARKER):i1-1])
+        return download(html_page.text[i0+len(STARTMARKER):i1-1])
 
-    name_find = soup.find("title").text
+    try:
+        name_find = soup.find("title").text
+        if name_find.startswith("404 - Not found"):
+            print(name_find)
+    except:
+        exit(0)
+        pass
+    print(name_find)
     slice_start = name_find.index("Watch ") + 6
     name = name_find[slice_start:]
     slice_end = name.index(" - VOE")
@@ -94,7 +108,10 @@ def download(URL):
 
             ydl_opts = {'outtmpl' : name,}
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download(link)
+                try:
+                    ydl.download(link)
+                except Exception as e:
+                    pass
             delpartfiles()
 
         except KeyError:
