@@ -50,16 +50,33 @@ def list_dl(doc):
 
 def download(URL):
     URL = str(URL)
-
-    html_page = requests.get(URL, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"})
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Priority": "u=1"
+    }
+    html_page = requests.get(URL, headers=headers)
+    
     soup = BeautifulSoup(html_page.content, 'html.parser')
-
+    if html_page.text.startswith("<script>"):
+        START = "window.location.href = '"
+        L = len(START)
+        i0 = html_page.text.find(START)
+        i1 = html_page.text.find("'",i0+L)
+        url = html_page.text[i0+L:i1]
+        return download(url)
+        
     name_find = soup.find("title").text
-    slice_start = name_find.index("Watch ") + 6
-    name = name_find[slice_start:]
-    slice_end = name.index(" - VOE")
-    name = name[:slice_end]
-    name = name.replace(" ","_")
+    if name_find.startswith("404 - Not found"):
+        print(name_find)
+        return
+    name = name_find.split()[0]
     print(name)
 
     sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
@@ -96,7 +113,10 @@ def download(URL):
 
             ydl_opts = {'outtmpl' : name,}
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download(link)
+                try:
+                    ydl.download(link)
+                except Exception as e:
+                    pass
             delpartfiles()
 
         except KeyError:
