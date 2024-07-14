@@ -29,7 +29,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.2.1")
+    print("Version v1.2.3")
     print("")
     print("______________")
     print("Arguments:")
@@ -37,6 +37,9 @@ def help():
     print("-u <URL> downloads the <URL> you specify")
     print("-l <doc> opens the <doc> you specify and downloads every URL line after line")
     print("<URL> just the URL as Argument works the same as with -u Argument")
+    print("______________")
+    print("")
+    print("Credits to @NikOverflow, @cuitrlal and @cybersnash on GitHub for contributing")
 
 def list_dl(doc):
     curLink = 0
@@ -102,7 +105,7 @@ def download(URL):
         link = base64.b64decode(link)
         link = link.decode("utf-8")
         print(name)
-        wget.download(link, out=f"{name}.mp4") #downloading the file
+        wget.download(link, out=f"{name}_SS.mp4") #downloading the file
     except KeyError:
         try:
             link = source_json["hls"]
