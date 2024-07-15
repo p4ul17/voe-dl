@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys, os, glob
 import re
 import requests
@@ -29,7 +30,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.2.3")
+    print("Version v1.2.4")
     print("")
     print("______________")
     print("Arguments:")
@@ -65,7 +66,7 @@ def download(URL):
         "Priority": "u=1"
     }
     html_page = requests.get(URL, headers=headers)
-    
+
     soup = BeautifulSoup(html_page.content, 'html.parser')
     if html_page.text.startswith("<script>"):
         START = "window.location.href = '"
@@ -74,13 +75,12 @@ def download(URL):
         i1 = html_page.text.find("'",i0+L)
         url = html_page.text[i0+L:i1]
         return download(url)
-        
-    name_find = soup.find("title").text
-    if name_find.startswith("404 - Not found"):
-        print(name_find)
-        return
-    name = name_find.split()[0]
-    print(name)
+
+    name_find = soup.find('meta', attrs={"name":"og:title"})
+    name = name_find["content"]
+    name = name.replace(" ","_")
+    print("Name of file: " + name)
+
 
     sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
@@ -104,14 +104,13 @@ def download(URL):
         link = source_json["mp4"] #extracting the link to the mp4 file
         link = base64.b64decode(link)
         link = link.decode("utf-8")
-        print(name)
         wget.download(link, out=f"{name}_SS.mp4") #downloading the file
     except KeyError:
         try:
             link = source_json["hls"]
             link = base64.b64decode(link)
             link = link.decode("utf-8")
-            
+
             name = name +'_SS.mp4'
 
             ydl_opts = {'outtmpl' : name,}
@@ -125,7 +124,7 @@ def download(URL):
         except KeyError:
             print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl, and if so file an issue on GitHub.")
             quit()
-    
+
     print("\n")
 
 def delpartfiles():

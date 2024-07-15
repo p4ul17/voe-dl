@@ -5,7 +5,7 @@ A Python downloader for voe.sx videos
 
 **Please use always the newest Version, because these suckers at voe change their site from time to time
 to make it harder for us to download via script!**
-**Currently working Version is v1.2.1**
+**Currently working Version is v1.2.4**
 
 # Usage
 1. Download the latest Release
