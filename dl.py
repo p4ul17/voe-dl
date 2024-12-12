@@ -44,7 +44,9 @@ def help():
 
 def list_dl(doc):
     curLink = 0
-    lines = open(doc).readlines()       #reads the lines of the given document and store them in the list "lines"
+    tmp_list = open(doc).readlines()
+    fixed_list = [el for el in tmp_list if not el.startswith('#')]
+    lines = fixed_list      #reads the lines of the given document and store them in the list "lines"
     for link in lines:                  #calls the download function for every link in the document
         curLink +=1
         print("Download %s / "%curLink + str(len(lines)))
