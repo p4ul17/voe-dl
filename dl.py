@@ -76,8 +76,7 @@ def download(URL):
         url = html_page.text[i0+L:i1]
         return download(url)
 
-    name_find = soup.find('meta', attrs={"name":"og:title"})
-    name = name_find["content"]
+    name = soup.find('title').string
     name = name.replace(" ","_")
     print("Name of file: " + name)
 
