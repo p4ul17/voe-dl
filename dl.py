@@ -68,52 +68,56 @@ def download(URL):
     html_page = requests.get(URL, headers=headers)
 
     soup = BeautifulSoup(html_page.content, 'html.parser')
+
     if html_page.text.startswith("<script>"):
         START = "window.location.href = '"
         L = len(START)
         i0 = html_page.text.find(START)
-        i1 = html_page.text.find("'",i0+L)
-        url = html_page.text[i0+L:i1]
+        i1 = html_page.text.find("'", i0 + L)
+        url = html_page.text[i0 + L:i1]
         return download(url)
 
-    name_find = soup.find('meta', attrs={"name":"og:title"})
-    name = name_find["content"]
-    name = name.replace(" ","_")
-    print("Name of file: " + name)
+    name_find = soup.find('meta', attrs={"name": "og:title"})
+    if name_find:
+        name = name_find["content"]
+        name = name.replace(" ", "_")
+        print("Name of file: " + name)
+    else:
+        print("Could not find the name of the file in the meta tag. Using default name.")
+        name = URL.split("/")[-1]  # Use the last part of the URL as the default file name
+        print("Using default file name: " + name)
 
-
-    sources_find = soup.find_all(string = re.compile("var sources")) #searching for the script tag containing the link to the mp4
+    sources_find = soup.find_all(string=re.compile("var sources"))  # Searching for the script tag containing the link to the mp4
     sources_find = str(sources_find)
-    #slice_start = sources_find.index("const sources")
     slice_start = sources_find.index("var sources")
-    source = sources_find[slice_start:] #cutting everything before 'var sources' in the script tag
+    source = sources_find[slice_start:]  # Cutting everything before 'var sources' in the script tag
     slice_end = source.index(";")
-    source = source[:slice_end] #cutting everything after ';' in the remaining String to make it ready for the JSON parser
+    source = source[:slice_end]  # Cutting everything after ';' in the remaining string to make it ready for the JSON parser
 
-    source = source.replace("var sources = ","")    #
-    source = source.replace("\'","\"")                #Making the JSON valid
-    source = source.replace("\\n","")                 #
-    source = source.replace("\\","")                  #
+    source = source.replace("var sources = ", "")
+    source = source.replace("\'", "\"")  # Making the JSON valid
+    source = source.replace("\\n", "")
+    source = source.replace("\\", "")
 
     strToReplace = ","
     replacementStr = ""
-    source = replacementStr.join(source.rsplit(strToReplace, 1)) #complicated but needed replacement of the last comma in the source String to make it JSON valid
+    source = replacementStr.join(source.rsplit(strToReplace, 1))  # Replacement of the last comma in the source string to make it JSON valid
 
-    source_json = json.loads(source) #parsing the JSON
+    source_json = json.loads(source)  # Parsing the JSON
     try:
-        link = source_json["mp4"] #extracting the link to the mp4 file
+        link = source_json["mp4"]  # Extracting the link to the mp4 file
         link = base64.b64decode(link)
         link = link.decode("utf-8")
-        wget.download(link, out=f"{name}_SS.mp4") #downloading the file
+        wget.download(link, out=f"{name}_SS.mp4")  # Downloading the file
     except KeyError:
         try:
             link = source_json["hls"]
             link = base64.b64decode(link)
             link = link.decode("utf-8")
 
-            name = name +'_SS.mp4'
+            name = name + '_SS.mp4'
 
-            ydl_opts = {'outtmpl' : name,}
+            ydl_opts = {'outtmpl': name,}
             with YoutubeDL(ydl_opts) as ydl:
                 try:
                     ydl.download(link)
@@ -122,7 +126,7 @@ def download(URL):
             delpartfiles()
 
         except KeyError:
-            print("Could not find downloadable URL. Voe might have change their site. Check that you are running the latest version of voe-dl, and if so file an issue on GitHub.")
+            print("Could not find downloadable URL. The site might have changed. Ensure you're using the latest version of the script and file an issue on GitHub.")
             quit()
 
     print("\n")
