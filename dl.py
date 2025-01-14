@@ -7,6 +7,7 @@ import wget
 from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
 import base64 # import base64
+import concurrent.futures # NEW: For Threading
 
 def main():
     args = sys.argv #saving the cli arguments into args
@@ -30,7 +31,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.2.4")
+    print("Version v1.3.0")
     print("")
     print("______________")
     print("Arguments:")
@@ -43,16 +44,29 @@ def help():
     print("Credits to @NikOverflow, @cuitrlal and @cybersnash on GitHub for contributing")
 
 def list_dl(doc):
-    curLink = 0
+    """
+    Reads lines from the specified doc file and downloads them in parallel.
+    Lines starting with '#' and empty lines are ignored.
+    """
     tmp_list = open(doc).readlines()
     fixed_list = [el for el in tmp_list if not el.startswith('#')]
-    lines = fixed_list                  #reads the lines of the given document and store them in the list "lines"
-    for link in lines:                  #calls the download function for every link in the document
-        curLink +=1
-        print("Download %s / "%curLink + str(len(lines)))
-        link = link.replace("\n","")
-        print("echo Link: %s"%link)
-        download(link)
+    lines = [link.strip() for link in fixed_list if link.strip()]
+
+    # Execute parallel downloads with up to 4 threads
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        future_to_link = {executor.submit(download, link): link for link in lines}
+
+        for i, future in enumerate(concurrent.futures.as_completed(future_to_link), start=1):
+            link = future_to_link[future]
+            print(f"Download {i} / {len(lines)}")
+            print(f"echo Link: {link}")
+            try:
+                future.result()
+            except Exception as e:
+                print(f"[!] Error downloading {link}: {e}")
+
+    # Remove .part files after all downloads are complete
+    delpartfiles()
 
 def download(URL):
     URL = str(URL)
@@ -110,23 +124,30 @@ def download(URL):
         link = source_json["mp4"]  # Extracting the link to the mp4 file
         link = base64.b64decode(link)
         link = link.decode("utf-8")
-        wget.download(link, out=f"{name}_SS.mp4")  # Downloading the file
+
+        basename, ext = os.path.splitext(name)
+        if not ext:
+            ext = ".mp4"
+        name = f"{basename}_SS{ext}"
+
+        wget.download(link, out=name)
     except KeyError:
         try:
             link = source_json["hls"]
             link = base64.b64decode(link)
             link = link.decode("utf-8")
 
-            name = name + '_SS.mp4'
+            basename, ext = os.path.splitext(name)
+            if not ext:
+                ext = ".mp4"
+            name = f"{basename}_SS{ext}"
 
-            ydl_opts = {'outtmpl': name,}
+            ydl_opts = {'outtmpl': name}
             with YoutubeDL(ydl_opts) as ydl:
                 try:
-                    ydl.download(link)
-                except Exception as e:
+                    ydl.download([link])
+                except Exception:
                     pass
-            delpartfiles()
-
         except KeyError:
             print("Could not find downloadable URL. The site might have changed. Ensure you're using the latest version of the script and file an issue on GitHub.")
             quit()

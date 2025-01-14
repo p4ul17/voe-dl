@@ -1,0 +1,5 @@
+*.mp4
+*.part
+*.txt
+!requirements.txt
+!links.txt
