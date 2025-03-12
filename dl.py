@@ -25,7 +25,13 @@ def main():
         download(URL)
     elif args[1] == "-l":   #if the first user argument is "-l" call the list_dl (list download) function
         doc = args[2]
-        list_dl(doc)
+        
+        if len(args) > 3 and args[3] == "-w":   #if the second user argument is "-w" set the max_workers to the value of the third argument
+            workers = int(args[4])
+        else:
+            workers = 4
+            
+        list_dl(doc, workers)
     else:
         URL = args[1]       #if the first user argument is the <URL> call the download function
         download(URL)
@@ -43,7 +49,7 @@ def help():
     print("")
     print("Credits to @NikOverflow, @cuitrlal and @cybersnash on GitHub for contributing")
 
-def list_dl(doc):
+def list_dl(doc, workers=4):
     """
     Reads lines from the specified doc file and downloads them in parallel.
     Lines starting with '#' and empty lines are ignored.
@@ -52,8 +58,10 @@ def list_dl(doc):
     fixed_list = [el for el in tmp_list if not el.startswith('#')]
     lines = [link.strip() for link in fixed_list if link.strip()]
 
+    print(f"Downloading {len(lines)} files in parallel with {workers} threads...")
+
     # Execute parallel downloads with up to 4 threads
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_link = {executor.submit(download, link): link for link in lines}
 
         for i, future in enumerate(concurrent.futures.as_completed(future_to_link), start=1):
