@@ -37,7 +37,7 @@ def main():
         download(URL)
 
 def help():
-    print("Version v1.3.0")
+    print("Version v1.4.0")
     print("")
     print("______________")
     print("Arguments:")
