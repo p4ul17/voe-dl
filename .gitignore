@@ -1,5 +1,7 @@
 *.mp4
 *.part
 *.txt
+*.mkv
 !requirements.txt
 !links.txt
+*.ytdl
