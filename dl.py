@@ -369,6 +369,28 @@ def download(URL):
                 except:
                     continue
 
+        # Method 6: Look for a168c encoded sources
+        if not source_json:
+            a168c_pattern = r"let a168c='([A-Za-z0-9+/=]+)'"
+            a168c_matches = re.findall(a168c_pattern, html_page.text)
+            for match in a168c_matches:
+                try:
+                    decoded = base64.b64decode(match).decode('utf-8')[::-1].replace("\\", "")
+                    if '.mp4' in decoded:
+                        mp4_pattern = r'(https?://[^"]+\.mp4[^"]*)"'
+                        mp4_matches = re.search(mp4_pattern, decoded)
+                        source_json = {"mp4": mp4_matches[0] }
+                        print(f"[+] Found base64 encoded MP4 URL")
+                        break
+                    elif '.m3u8' in decoded:
+                        m3u8_pattern = r'(https?://[^"]+\.m3u8[^"]*)"'
+                        m3u8_matches = re.search(m3u8_pattern, decoded)
+                        source_json = {"hls": m3u8_matches[0] }
+                        print(f"[+] Found base64 encoded HLS URL")
+                        break
+                except:
+                    continue
+
         # If we still don't have sources, try to find any iframe that might contain the video
         if not source_json:
             iframes = soup.find_all("iframe")
