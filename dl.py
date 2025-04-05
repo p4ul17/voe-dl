@@ -216,13 +216,17 @@ def download(URL):
                 source = source.replace("\\n", "")
                 source = source.replace("\\", "")
 
-                # Clean up JSON for parsing
-                strToReplace = ","
-                replacementStr = ""
-                source = replacementStr.join(source.rsplit(strToReplace, 1))
-
-                source_json = json.loads(source)
-                print("[+] Found sources using var sources pattern")
+                # Check for "Bait" sources
+                if is_bait_source(source):
+                    print(f"[!] Ignoring bait source: {source}")
+                    source_json = None
+                else:
+                    # Clean up JSON for parsing
+                    strToReplace = ","
+                    replacementStr = ""
+                    source = replacementStr.join(source.rsplit(strToReplace, 1))
+                    source_json = json.loads(source)
+                    print("[+] Found sources using var sources pattern")
             except (ValueError, json.JSONDecodeError) as e:
                 print(f"[!] Error parsing sources: {e}")
                 source_json = None
@@ -294,6 +298,9 @@ def download(URL):
             for video in video_tags:
                 src = video.get("src")
                 if src:
+                    if is_bait_source(src):
+                        print(f"[!] Ignoring bait source: {src}")
+                        continue
                     print(f"[+] Found direct video source: {src}")
                     source_json = {"mp4": src}
                     break
@@ -304,6 +311,9 @@ def download(URL):
                     for source_tag in source_tags:
                         src = source_tag.get("src")
                         if src:
+                            if is_bait_source(src):
+                                print(f"[!] Ignoring bait source: {src}")
+                                continue
                             type_attr = source_tag.get("type", "")
                             if "mp4" in type_attr:
                                 source_json = {"mp4": src}
@@ -324,16 +334,22 @@ def download(URL):
             m3u8_pattern = r'(https?://[^"\']+\.m3u8[^"\'\s]*)'
             m3u8_matches = re.findall(m3u8_pattern, html_page.text)
             if m3u8_matches:
-                source_json = {"hls": m3u8_matches[0]}
-                print(f"[+] Found HLS URL: {m3u8_matches[0]}")
+                if is_bait_source(m3u8_matches[0]):
+                    print(f"[!] Ignoring bait source: {m3u8_matches[0]}")
+                else:
+                    source_json = {"hls": m3u8_matches[0]}
+                    print(f"[+] Found HLS URL: {m3u8_matches[0]}")
 
             # Look for mp4 URLs
             if not source_json:
                 mp4_pattern = r'(https?://[^"\']+\.mp4[^"\'\s]*)'
                 mp4_matches = re.findall(mp4_pattern, html_page.text)
                 if mp4_matches:
-                    source_json = {"mp4": mp4_matches[0]}
-                    print(f"[+] Found MP4 URL: {mp4_matches[0]}")
+                    if is_bait_source(mp4_matches[0]):
+                        print(f"[!] Ignoring bait source: {mp4_matches[0]}")
+                    else:
+                        source_json = {"mp4": mp4_matches[0]}
+                        print(f"[+] Found MP4 URL: {mp4_matches[0]}")
 
         # Method 5: Look for base64 encoded sources
         if not source_json:
@@ -382,6 +398,15 @@ def download(URL):
 
         # Process the found sources
         try:
+            if isinstance(source_json, str):
+                print(f"[!] source_json is a string. Wrapping it in a dictionary.")
+                source_json = {"mp4": source_json}  # Standardisiere auf ein Dictionary mit "mp4" als Schlüssel
+
+            if not isinstance(source_json, dict):
+                print(f"[!] Unexpected source_json format: {type(source_json)}")
+                print(f"[!] source_json content: {source_json}")
+                return  # Beende die Funktion, wenn source_json kein Dictionary ist
+
             if "mp4" in source_json:
                 link = source_json["mp4"]
                 # Check if the link is base64 encoded
@@ -497,6 +522,14 @@ def delpartfiles():
     path = os.getcwd()
     for file in glob.iglob(os.path.join(path, '*.part')):
         os.remove(file)
+
+def is_bait_source(source):
+    """Check if the given source matches any predefined bait patterns."""
+    baits = [
+        "BigBuckBunny.mp4",  # Beispiel-Bait
+        "example.com/bait",  # Weitere Baits können hier hinzugefügt werden
+    ]
+    return any(bait in source for bait in baits)
 
 if __name__ == "__main__":
     main()
