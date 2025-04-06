@@ -442,12 +442,12 @@ def download(URL):
         try:
             if isinstance(source_json, str):
                 print(f"[!] source_json is a string. Wrapping it in a dictionary.")
-                source_json = {"mp4": source_json}  # Standardisiere auf ein Dictionary mit "mp4" als Schlüssel
+                source_json = {"mp4": source_json}
 
             if not isinstance(source_json, dict):
                 print(f"[!] Unexpected source_json format: {type(source_json)}")
                 print(f"[!] source_json content: {source_json}")
-                return  # Beende die Funktion, wenn source_json kein Dictionary ist
+                return
 
             if "mp4" in source_json:
                 link = source_json["mp4"]
@@ -568,8 +568,8 @@ def delpartfiles():
 def is_bait_source(source):
     """Check if the given source matches any predefined bait patterns."""
     baits = [
-        "BigBuckBunny.mp4",  # Beispiel-Bait
-        "example.com/bait",  # Weitere Baits können hier hinzugefügt werden
+        "BigBuckBunny.mp4",
+        # Add more bait patterns as needed
     ]
     return any(bait in source for bait in baits)
 
