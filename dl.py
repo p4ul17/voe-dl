@@ -575,11 +575,17 @@ def is_bait_source(source):
 
 # Function to clean and pad base64 safely
 def clean_base64(s):
-    s = s.replace('\\', '')  # remove literal backslashes
-    missing_padding = len(s) % 4
-    if missing_padding:
-        s += '=' * (4 - missing_padding)
-    return s
+    try:
+        s = s.replace('\\', '')  # remove literal backslashes
+        missing_padding = len(s) % 4
+        if missing_padding:
+            s += '=' * (4 - missing_padding)
+        # Validate if the string is valid base64
+        base64.b64decode(s, validate=True)
+        return s
+    except (base64.binascii.Error, ValueError) as e:
+        print(f"[!] Invalid base64 string: {e}")
+        return None
 
 if __name__ == "__main__":
     main()
