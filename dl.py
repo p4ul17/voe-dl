@@ -81,7 +81,8 @@ def main():
 
 def help():
     print("Version History:")
-    print("- Version v1.4.0 (Latest, Forked by MPZ-00)")
+    print("- Version v1.5.0 (Latest, Improved source detection and bait handling)")
+    print("- Version v1.4.0 (Forked by MPZ-00)")
     print("- Version v1.3.1 (Forked by HerobrineTV, Fixed issues with finding the Download Links)")
     print("")
     print("______________")
@@ -216,13 +217,17 @@ def download(URL):
                 source = source.replace("\\n", "")
                 source = source.replace("\\", "")
 
-                # Clean up JSON for parsing
-                strToReplace = ","
-                replacementStr = ""
-                source = replacementStr.join(source.rsplit(strToReplace, 1))
-
-                source_json = json.loads(source)
-                print("[+] Found sources using var sources pattern")
+                # Check for "Bait" sources
+                if is_bait_source(source):
+                    print(f"[!] Ignoring bait source: {source}")
+                    source_json = None
+                else:
+                    # Clean up JSON for parsing
+                    strToReplace = ","
+                    replacementStr = ""
+                    source = replacementStr.join(source.rsplit(strToReplace, 1))
+                    source_json = json.loads(source)
+                    print("[+] Found sources using var sources pattern")
             except (ValueError, json.JSONDecodeError) as e:
                 print(f"[!] Error parsing sources: {e}")
                 source_json = None
@@ -294,6 +299,9 @@ def download(URL):
             for video in video_tags:
                 src = video.get("src")
                 if src:
+                    if is_bait_source(src):
+                        print(f"[!] Ignoring bait source: {src}")
+                        continue
                     print(f"[+] Found direct video source: {src}")
                     source_json = {"mp4": src}
                     break
@@ -304,6 +312,9 @@ def download(URL):
                     for source_tag in source_tags:
                         src = source_tag.get("src")
                         if src:
+                            if is_bait_source(src):
+                                print(f"[!] Ignoring bait source: {src}")
+                                continue
                             type_attr = source_tag.get("type", "")
                             if "mp4" in type_attr:
                                 source_json = {"mp4": src}
@@ -324,16 +335,22 @@ def download(URL):
             m3u8_pattern = r'(https?://[^"\']+\.m3u8[^"\'\s]*)'
             m3u8_matches = re.findall(m3u8_pattern, html_page.text)
             if m3u8_matches:
-                source_json = {"hls": m3u8_matches[0]}
-                print(f"[+] Found HLS URL: {m3u8_matches[0]}")
+                if is_bait_source(m3u8_matches[0]):
+                    print(f"[!] Ignoring bait source: {m3u8_matches[0]}")
+                else:
+                    source_json = {"hls": m3u8_matches[0]}
+                    print(f"[+] Found HLS URL: {m3u8_matches[0]}")
 
             # Look for mp4 URLs
             if not source_json:
                 mp4_pattern = r'(https?://[^"\']+\.mp4[^"\'\s]*)'
                 mp4_matches = re.findall(mp4_pattern, html_page.text)
                 if mp4_matches:
-                    source_json = {"mp4": mp4_matches[0]}
-                    print(f"[+] Found MP4 URL: {mp4_matches[0]}")
+                    if is_bait_source(mp4_matches[0]):
+                        print(f"[!] Ignoring bait source: {mp4_matches[0]}")
+                    else:
+                        source_json = {"mp4": mp4_matches[0]}
+                        print(f"[+] Found MP4 URL: {mp4_matches[0]}")
 
         # Method 5: Look for base64 encoded sources
         if not source_json:
@@ -352,6 +369,48 @@ def download(URL):
                         break
                 except:
                     continue
+
+        # Method 6: Look for a168c encoded sources
+        if not source_json:
+            print("[*] Searching for a168c encoded sources...")
+
+            # Robust pattern to capture long base64 string inside script tags
+            a168c_script_pattern = r"a168c\s*=\s*'([^']+)'"
+            match = re.search(a168c_script_pattern, html_page.text, re.DOTALL)
+
+            if match:
+                raw_base64 = match.group(1)
+                try:
+                    cleaned = clean_base64(raw_base64)
+                    decoded = base64.b64decode(cleaned).decode('utf-8')[::-1]
+
+                    # Optional: Try parsing full JSON if applicable
+                    try:
+                        parsed = json.loads(decoded)
+                        # print("[+] Decoded JSON:")
+                        # print(json.dumps(parsed, indent=4))
+
+                        if 'direct_access_url' in parsed:
+                            source_json = {"mp4": parsed['direct_access_url']}
+                            print("[+] Found direct .mp4 URL in JSON.")
+                        elif 'source' in parsed:
+                            source_json = {"hls": parsed['source']}
+                            print("[+] Found fallback .m3u8 URL in JSON.")
+                    except json.JSONDecodeError:
+                        print("[-] Decoded string is not valid JSON. Trying fallback regex search...")
+
+                        # If it's not JSON, fallback to pattern search
+                        mp4_match = re.search(r'(https?://[^\s"]+\.mp4[^\s"]*)', decoded)
+                        m3u8_match = re.search(r'(https?://[^\s"]+\.m3u8[^\s"]*)', decoded)
+
+                        if mp4_match:
+                            source_json = {"mp4": mp4_match.group(1)}
+                            print("[+] Found base64 encoded MP4 URL.")
+                        elif m3u8_match:
+                            source_json = {"hls": m3u8_match.group(1)}
+                            print("[+] Found base64 encoded HLS (m3u8) URL.")
+                except Exception as e:
+                    print(f"[!] Failed to decode a168c string: {e}")
 
         # If we still don't have sources, try to find any iframe that might contain the video
         if not source_json:
@@ -382,6 +441,15 @@ def download(URL):
 
         # Process the found sources
         try:
+            if isinstance(source_json, str):
+                print(f"[!] source_json is a string. Wrapping it in a dictionary.")
+                source_json = {"mp4": source_json}
+
+            if not isinstance(source_json, dict):
+                print(f"[!] Unexpected source_json format: {type(source_json)}")
+                print(f"[!] source_json content: {source_json}")
+                return
+
             if "mp4" in source_json:
                 link = source_json["mp4"]
                 # Check if the link is base64 encoded
@@ -497,6 +565,28 @@ def delpartfiles():
     path = os.getcwd()
     for file in glob.iglob(os.path.join(path, '*.part')):
         os.remove(file)
+
+def is_bait_source(source):
+    """Check if the given source matches any predefined bait patterns."""
+    baits = [
+        "BigBuckBunny.mp4",
+        # Add more bait patterns as needed
+    ]
+    return any(bait in source for bait in baits)
+
+# Function to clean and pad base64 safely
+def clean_base64(s):
+    try:
+        s = s.replace('\\', '')  # remove literal backslashes
+        missing_padding = len(s) % 4
+        if missing_padding:
+            s += '=' * (4 - missing_padding)
+        # Validate if the string is valid base64
+        base64.b64decode(s, validate=True)
+        return s
+    except (base64.binascii.Error, ValueError) as e:
+        print(f"[!] Invalid base64 string: {e}")
+        return None
 
 if __name__ == "__main__":
     main()

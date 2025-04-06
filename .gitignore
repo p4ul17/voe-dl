@@ -5,3 +5,5 @@
 !requirements.txt
 !links.txt
 *.ytdl
+debug_page*
+.vscode/
