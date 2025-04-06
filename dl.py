@@ -81,7 +81,8 @@ def main():
 
 def help():
     print("Version History:")
-    print("- Version v1.4.0 (Latest, Forked by MPZ-00)")
+    print("- Version v1.5.0 (Latest, Improved source detection and bait handling)")
+    print("- Version v1.4.0 (Forked by MPZ-00)")
     print("- Version v1.3.1 (Forked by HerobrineTV, Fixed issues with finding the Download Links)")
     print("")
     print("______________")
