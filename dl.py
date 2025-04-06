@@ -81,7 +81,8 @@ def main():
 
 def help():
     print("Version History:")
-    print("- Version v1.5.0 (Latest, Improved source detection and bait handling)")
+    print("- Version v1.5.1 (Documentation updates: help descriptions, README usage info)")
+    print("- Version v1.5.0 (Improved source detection and bait handling)")
     print("- Version v1.4.0 (Forked by MPZ-00)")
     print("- Version v1.3.1 (Forked by HerobrineTV, Fixed issues with finding the Download Links)")
     print("")
@@ -90,10 +91,11 @@ def help():
     print("-h shows this help")
     print("-u <URL> downloads the <URL> you specify")
     print("-l <doc> opens the <doc> you specify and downloads every URL line after line")
+    print("-w <number> sets the number of parallel workers for list downloads (default: 4)")
     print("<URL> just the URL as Argument works the same as with -u Argument")
     print("______________")
     print("")
-    print("Credits to @NikOverflow, @cuitrlal and @cybersnash on GitHub for contributing")
+    print("Credits to @NikOverflow, @cuitrlal, @cybersnash, @HerobrineTV and @MPZ-00 on GitHub for contributing")
 
 def list_dl(doc, workers=4):
     """
