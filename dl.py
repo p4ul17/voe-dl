@@ -386,8 +386,8 @@ def download(URL):
                     # Optional: Try parsing full JSON if applicable
                     try:
                         parsed = json.loads(decoded)
-                        print("[+] Decoded JSON:")
-                        print(json.dumps(parsed, indent=4))
+                        # print("[+] Decoded JSON:")
+                        # print(json.dumps(parsed, indent=4))
 
                         if 'direct_access_url' in parsed:
                             source_json = {"mp4": parsed['direct_access_url']}
