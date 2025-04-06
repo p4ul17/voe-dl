@@ -81,7 +81,8 @@ def main():
 
 def help():
     print("Version History:")
-    print("- Version v1.4.0 (Latest, Forked by MPZ-00)")
+    print("- Version v1.5.0 (Latest, Improved source detection and bait handling)")
+    print("- Version v1.4.0 (Forked by MPZ-00)")
     print("- Version v1.3.1 (Forked by HerobrineTV, Fixed issues with finding the Download Links)")
     print("")
     print("______________")
@@ -442,12 +443,12 @@ def download(URL):
         try:
             if isinstance(source_json, str):
                 print(f"[!] source_json is a string. Wrapping it in a dictionary.")
-                source_json = {"mp4": source_json}  # Standardisiere auf ein Dictionary mit "mp4" als Schlüssel
+                source_json = {"mp4": source_json}
 
             if not isinstance(source_json, dict):
                 print(f"[!] Unexpected source_json format: {type(source_json)}")
                 print(f"[!] source_json content: {source_json}")
-                return  # Beende die Funktion, wenn source_json kein Dictionary ist
+                return
 
             if "mp4" in source_json:
                 link = source_json["mp4"]
@@ -568,18 +569,24 @@ def delpartfiles():
 def is_bait_source(source):
     """Check if the given source matches any predefined bait patterns."""
     baits = [
-        "BigBuckBunny.mp4",  # Beispiel-Bait
-        "example.com/bait",  # Weitere Baits können hier hinzugefügt werden
+        "BigBuckBunny.mp4",
+        # Add more bait patterns as needed
     ]
     return any(bait in source for bait in baits)
 
 # Function to clean and pad base64 safely
 def clean_base64(s):
-    s = s.replace('\\', '')  # remove literal backslashes
-    missing_padding = len(s) % 4
-    if missing_padding:
-        s += '=' * (4 - missing_padding)
-    return s
+    try:
+        s = s.replace('\\', '')  # remove literal backslashes
+        missing_padding = len(s) % 4
+        if missing_padding:
+            s += '=' * (4 - missing_padding)
+        # Validate if the string is valid base64
+        base64.b64decode(s, validate=True)
+        return s
+    except (base64.binascii.Error, ValueError) as e:
+        print(f"[!] Invalid base64 string: {e}")
+        return None
 
 if __name__ == "__main__":
     main()
