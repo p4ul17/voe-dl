@@ -414,6 +414,51 @@ def download(URL):
                 except Exception as e:
                     print(f"[!] Failed to decode a168c string: {e}")
 
+        # Method 7: Look for MKGMa encoded sources
+        if not source_json:
+            print("[*] Searching for MKGMa sources...")
+
+            MKGMa_pattern = r'MKGMa="(.*?)"'
+            match = re.search(MKGMa_pattern, html_page.text, re.DOTALL)
+
+            if match:
+                raw_MKGMa = match.group(1)
+
+                try:
+                    encrypted_data = rot13(raw_MKGMa)
+                    cleaned_input = sanitize_input(encrypted_data, html_page.text)
+                    underscore_removed = cleaned_input.replace('_', '')
+                    decoded_from_base64 = base64.b64decode(underscore_removed).decode('utf-8')
+                    shifted_back = shift_back(decoded_from_base64, 3)
+                    reversed_string = shifted_back[::-1]
+                    decoded = base64.b64decode(reversed_string).decode('utf-8')
+
+                    try:
+                        parsed_json = json.loads(decoded)
+
+                        if 'direct_access_url' in parsed_json:
+                            source_json = {"mp4": parsed_json['direct_access_url']}
+                            print("[+] Found direct .mp4 URL in JSON.")
+                        elif 'source' in parsed_json:
+                            source_json = {"hls": parsed_json['source']}
+                            print("[+] Found fallback .m3u8 URL in JSON.")
+
+                    except json.JSONDecodeError:
+                        print("[-] Decoded string is not valid JSON. Attempting fallback regex search...")
+
+                        mp4_match = re.search(r'(https?://[^\s"]+\.mp4[^\s"]*)', decoded)
+                        m3u8_match = re.search(r'(https?://[^\s"]+\.m3u8[^\s"]*)', decoded)
+
+                        if mp4_match:
+                            source_json = {"mp4": mp4_match.group(1)}
+                            print("[+] Found base64 encoded MP4 URL.")
+                        elif m3u8_match:
+                            source_json = {"hls": m3u8_match.group(1)}
+                            print("[+] Found base64 encoded HLS (m3u8) URL.")
+
+                except Exception as e:
+                    print(f"[-] Error while decoding MKGMa string: {e}")
+        
         # If we still don't have sources, try to find any iframe that might contain the video
         if not source_json:
             iframes = soup.find_all("iframe")
@@ -589,6 +634,33 @@ def clean_base64(s):
     except (base64.binascii.Error, ValueError) as e:
         print(f"[!] Invalid base64 string: {e}")
         return None
+        
+# Rot13 decoding for MKGMa
+def rot13(text):
+    result = []
+    for char in text:
+        if 'A' <= char <= 'Z':
+            result.append(chr((ord(char) - ord('A') + 13) % 26 + ord('A')))
+        elif 'a' <= char <= 'z':
+            result.append(chr((ord(char) - ord('a') + 13) % 26 + ord('a')))
+        else:
+            result.append(char)
+    return ''.join(result)
+
+# Sanitize input by replacing blacklist symbols with underscores
+def sanitize_input(text, html_page):
+    blacklist_pattern = r"\[\s*'([^']+)'(?:\s*,\s*'([^']+)'){6}\s*\]"
+    match_b = re.search(blacklist_pattern, html_page, re.DOTALL)
+    blacklist = match_b.group()  if match_b else []
+    result = text
+    for symbol in blacklist:
+        pattern = re.escape(symbol)
+        result = re.sub(pattern, '_', result)
+    return result
+
+# Shift characters back by a specified amount
+def shift_back(text, amount):
+    return ''.join(chr(ord(c) - amount) for c in text)
 
 if __name__ == "__main__":
     main()
