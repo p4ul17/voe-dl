@@ -81,6 +81,7 @@ def main():
 
 def help():
     print("Version History:")
+    print("- Version v1.6.0 (Method 7 for source detection by @ottobauer)")
     print("- Version v1.5.1 (Documentation updates: help descriptions, README usage info)")
     print("- Version v1.5.0 (Improved source detection and bait handling)")
     print("- Version v1.4.0 (Forked by MPZ-00)")
