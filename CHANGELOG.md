@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.6.0] - Enhanced Source Detection with Method 7
+**Release Date**: 2025-04-21
+
+### Added
+- Implemented Method 7 for source detection, contributed by @th3infinity and @ottobauer.
+  - Decoding process includes multiple steps: ROT13, pattern replacement, underscore removal, Base64 decoding, character shifting, reversing, and final Base64 decoding.
+  - Enhanced handling of encrypted and hidden sources.
+
+### Changed
+- Improved robustness of source detection logic to accommodate evolving site structures.
+
+---
+
 ## [v1.5.1] - Documentation Updates
 **Release Date**: 2025-04-06
 
