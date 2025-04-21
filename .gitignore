@@ -1,9 +1,22 @@
+# Video and temporary files
 *.mp4
-*.part
-*.txt
 *.mkv
+*.part
+
+# Text and debug files
+*.txt
+debug_page*
+
+# yt-dlp related files
+*.ytdl
+
+# Build and distribution directories
+build/
+dist/
+
+# IDE and editor files
+.vscode/
+
+# Exceptions
 !requirements.txt
 !links.txt
-*.ytdl
-debug_page*
-.vscode/
