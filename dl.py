@@ -52,6 +52,65 @@ def get_browser_headers(url=None):
     return headers
 
 
+# Method-8 dedicated helpers (obfuscated JSON inside <script type="application/json">) | @Domkeykong
+def _rot13(text: str) -> str:
+    """Apply ROT13 cipher (letters only)."""
+    out = []
+    for ch in text:
+        o = ord(ch)
+        if 65 <= o <= 90:
+            out.append(chr(((o - 65 + 13) % 26) + 65))
+        elif 97 <= o <= 122:
+            out.append(chr(((o - 97 + 13) % 26) + 97))
+        else:
+            out.append(ch)
+    return ''.join(out)
+
+
+def _replace_patterns(txt: str) -> str:
+    """Strip marker substrings used as obfuscation separators."""
+    for pat in ['@$', '^^', '~@', '%?', '*~', '!!', '#&']:
+        txt = txt.replace(pat, '')
+    return txt
+
+
+def _shift_chars(text: str, shift: int) -> str:
+    """Shift character code-points by *-shift* (decode)."""
+    return ''.join(chr(ord(c) - shift) for c in text)
+
+
+def _safe_b64_decode(s: str) -> str:
+    """Base64 decode with safe padding and utf-8 fallback."""
+    pad = len(s) % 4
+    if pad:
+        s += '=' * (4 - pad)
+    return base64.b64decode(s).decode('utf-8', errors='replace')
+
+
+def deobfuscate_embedded_json(raw_json: str):
+    """Return a dict or str extracted from the obfuscated JSON array found in <script type="application/json">."""
+    try:
+        arr = json.loads(raw_json)
+        if not (isinstance(arr, list) and arr and isinstance(arr[0], str)):
+            return None
+        obf = arr[0]
+    except json.JSONDecodeError:
+        return None
+
+    try:
+        step1 = _rot13(obf)
+        step2 = _replace_patterns(step1)
+        step3 = _safe_b64_decode(step2)
+        step4 = _shift_chars(step3, 3)
+        step5 = step4[::-1]
+        step6 = _safe_b64_decode(step5)
+        try:
+            return json.loads(step6)  # ideally a dict with direct_access_url / source
+        except json.JSONDecodeError:
+            return step6  # return plain string for fallback regex search
+    except Exception:
+        return None
+
 def main():
     args = sys.argv  # saving the cli arguments into args
 
@@ -81,6 +140,7 @@ def main():
 
 def help():
     print("Version History:")
+    print("- Version v1.7.0 (Method 8 for source detection by @Domkeykong)")
     print("- Version v1.6.0 (Method 7 for source detection by @ottobauer)")
     print("- Version v1.5.1 (Documentation updates: help descriptions, README usage info)")
     print("- Version v1.5.0 (Improved source detection and bait handling)")
@@ -474,6 +534,42 @@ def download(URL):
 
                 except Exception as e:
                     print(f"[-] Error while decoding MKGMa string: {e}")
+
+        # Method 8: Obfuscated JSON in <script type="application/json"> tags
+        if not source_json:
+            print("[*] Searching for obfuscated JSON sources…")
+            app_json_scripts = soup.find_all("script", attrs={"type": "application/json"})
+            for js in app_json_scripts:
+                if not js.string:
+                    continue
+                candidate = js.string.strip()
+                result = deobfuscate_embedded_json(candidate)
+                if result is None:
+                    continue
+                try:
+                    if isinstance(result, dict):
+                        if 'direct_access_url' in result:
+                            source_json = {"mp4": result['direct_access_url']}
+                            print("[+] Found direct .mp4 URL in obfuscated JSON")
+                        elif 'source' in result:
+                            source_json = {"hls": result['source']}
+                            print("[+] Found .m3u8 URL in obfuscated JSON")
+                        elif any(k in result for k in ("mp4", "hls")):
+                            source_json = result
+                            print("[+] Found media URL in obfuscated JSON")
+                    elif isinstance(result, str):
+                        mp4_m = re.search(r'(https?://[^\s"]+\.mp4[^\s"]*)', result)
+                        m3u8_m = re.search(r'(https?://[^\s"]+\.m3u8[^\s"]*)', result)
+                        if mp4_m:
+                            source_json = {"mp4": mp4_m.group(0)}
+                        elif m3u8_m:
+                            source_json = {"hls": m3u8_m.group(0)}
+                        if source_json:
+                            print("[+] Extracted media link from obfuscated JSON string")
+                except Exception as e:
+                    print(f"[!] Error parsing obfuscated JSON result: {e}")
+                if source_json:
+                    break
 
         # If we still don't have sources, try to find any iframe that might contain the video
         if not source_json:
