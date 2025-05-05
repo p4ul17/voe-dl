@@ -725,14 +725,26 @@ def delpartfiles():
     for file in glob.iglob(os.path.join(path, '*.part')):
         os.remove(file)
 
-def is_bait_source(source):
-    """Check if the given source matches any predefined bait patterns."""
-    baits = [
-        "BigBuckBunny.mp4",
-        "Big_Buck_Bunny_1080_10s_5MB.mp4",
-        # Add more bait patterns as needed
+def is_bait_source(source: str) -> bool:
+    """Return True if *source* looks like a known test/bait video."""
+    bait_filenames = [
+        "BigBuckBunny",
+        "Big_Buck_Bunny_1080_10s_5MB",
+        "bbb.mp4",
+        # Add more bait filenames as needed
     ]
-    return any(bait in source for bait in baits)
+    bait_domains = [
+        "test-videos.co.uk",
+        "sample-videos.com",
+        "commondatastorage.googleapis.com",
+        # Add more bait domains as needed
+    ]
+    if any(fn.lower() in source.lower() for fn in bait_filenames):
+        return True
+    parsed = urlparse(source)
+    if any(dom in parsed.netloc for dom in bait_domains):
+        return True
+    return False
 
 # Function to clean and pad base64 safely
 def clean_base64(s):
