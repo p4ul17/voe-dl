@@ -140,6 +140,7 @@ def main():
 
 def help():
     print("Version History:")
+    print("- Version v1.7.1 (Improved bait detection)")
     print("- Version v1.7.0 (Method 8 for source detection by @Domkeykong)")
     print("- Version v1.6.0 (Method 7 for source detection by @ottobauer)")
     print("- Version v1.5.1 (Documentation updates: help descriptions, README usage info)")
