@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.7.1] - Improved Bait Detection
+**Release Date**: 2025-05-06
+
+### Added
+- Enhanced bait detection logic to include additional patterns for filenames and domains.
+
+---
+
+## [v1.7.0] - Method 8 for Source Detection
+**Release Date**: 2025-05-06
+
+### Added
+- Implemented Method 8 for source detection, contributed by @Domkeykong.
+  - Decoding process includes multiple steps: ROT13, pattern replacement, Base64 decoding, character shifting, reversing, and final Base64 decoding.
+  - Handles obfuscated JSON sources embedded in `<script type="application/json">` tags.
+  - Added helper functions for decoding and deobfuscation.
+
+### Changed
+- Updated `help()` function to include Method 8 in the version history.
+- Improved error handling for obfuscated JSON parsing.
+
+---
+
 ## [v1.6.0] - Enhanced Source Detection with Method 7
 **Release Date**: 2025-04-21
 
