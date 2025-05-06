@@ -760,6 +760,6 @@ def clean_base64(s):
     except (base64.binascii.Error, ValueError) as e:
         print(f"[!] Invalid base64 string: {e}")
         return None
-
+        
 if __name__ == "__main__":
     main()
