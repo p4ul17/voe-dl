@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.7.2] - Upstream Merge & Sync
+**Release Date**: 2025-05-06
+
+### Added
+- Merged latest changes from `upstream/main`, including upstream's implementation of Method 7.
+
+### Removed
+- Redundant upstream Method 7 code block — already present and documented in earlier implementation.
+
+### Changed
+- Codebase synced with upstream while preserving local improvements and structure.
+
+---
+
 ## [v1.7.1] - Improved Bait Detection
 **Release Date**: 2025-05-06
 
