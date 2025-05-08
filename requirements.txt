@@ -2,4 +2,3 @@ requests
 beautifulsoup4
 yt-dlp
 wget
-base64
