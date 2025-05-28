@@ -617,6 +617,7 @@ def is_bait_source(source):
     """Check if the given source matches any predefined bait patterns."""
     baits = [
         "BigBuckBunny.mp4",
+        "Big_Buck_Bunny_1080_10s_5MB.mp4",
         # Add more bait patterns as needed
     ]
     return any(bait in source for bait in baits)
