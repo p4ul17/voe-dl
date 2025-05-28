@@ -421,6 +421,11 @@ def download(URL):
             MKGMa_pattern = r'MKGMa="(.*?)"'
             match = re.search(MKGMa_pattern, html_page.text, re.DOTALL)
 
+            if not match:
+                print("[*] Searching for new MKGMa application/json ...")
+                MKGMa_pattern=r'<script type="application/json">.*\[(.*?)\]</script>'
+                match = re.search(MKGMa_pattern, html_page.text, re.DOTALL)
+
             if match:
                 raw_MKGMa = match.group(1)
 
