@@ -3,7 +3,13 @@
 
 A Python-based downloader for videos hosted on [voe.sx](https://voe.sx).
 
-[![Latest Release](https://img.shields.io/github/v/release/MPZ-00/voe-dl)](https://github.com/MPZ-00/voe-dl/releases)
+### 🔄 Release Status
+
+| Source               | Version                                                                  |
+|----------------------|--------------------------------------------------------------------------|
+| **Upstream**         | [![Upstream Release](https://img.shields.io/github/v/release/p4ul17/voe-dl)](https://github.com/p4ul17/voe-dl/releases) |
+| **MPZ-00's Fork**    | [![MPZ-00's Release](https://img.shields.io/github/v/release/MPZ-00/voe-dl)](https://github.com/MPZ-00/voe-dl/releases/latest) |
+
 
 ---
 
