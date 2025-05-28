@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.7.3] - Documentation Updates
+**Release Date**: 2025-05-28
+
+### Added
+- Updated `README.md` for improved clarity and structure.
+
+### Changed
+- Improved formatting and consistency across documentation files.
+
+---
+
 ## [v1.7.2] - Upstream Merge & Sync
 **Release Date**: 2025-05-06
 
