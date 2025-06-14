@@ -52,6 +52,65 @@ def get_browser_headers(url=None):
     return headers
 
 
+# Method-8 dedicated helpers (obfuscated JSON inside <script type="application/json">) | @Domkeykong
+def _rot13(text: str) -> str:
+    """Apply ROT13 cipher (letters only)."""
+    out = []
+    for ch in text:
+        o = ord(ch)
+        if 65 <= o <= 90:
+            out.append(chr(((o - 65 + 13) % 26) + 65))
+        elif 97 <= o <= 122:
+            out.append(chr(((o - 97 + 13) % 26) + 97))
+        else:
+            out.append(ch)
+    return ''.join(out)
+
+
+def _replace_patterns(txt: str) -> str:
+    """Strip marker substrings used as obfuscation separators."""
+    for pat in ['@$', '^^', '~@', '%?', '*~', '!!', '#&']:
+        txt = txt.replace(pat, '')
+    return txt
+
+
+def _shift_chars(text: str, shift: int) -> str:
+    """Shift character code-points by *-shift* (decode)."""
+    return ''.join(chr(ord(c) - shift) for c in text)
+
+
+def _safe_b64_decode(s: str) -> str:
+    """Base64 decode with safe padding and utf-8 fallback."""
+    pad = len(s) % 4
+    if pad:
+        s += '=' * (4 - pad)
+    return base64.b64decode(s).decode('utf-8', errors='replace')
+
+
+def deobfuscate_embedded_json(raw_json: str):
+    """Return a dict or str extracted from the obfuscated JSON array found in <script type="application/json">."""
+    try:
+        arr = json.loads(raw_json)
+        if not (isinstance(arr, list) and arr and isinstance(arr[0], str)):
+            return None
+        obf = arr[0]
+    except json.JSONDecodeError:
+        return None
+
+    try:
+        step1 = _rot13(obf)
+        step2 = _replace_patterns(step1)
+        step3 = _safe_b64_decode(step2)
+        step4 = _shift_chars(step3, 3)
+        step5 = step4[::-1]
+        step6 = _safe_b64_decode(step5)
+        try:
+            return json.loads(step6)  # ideally a dict with direct_access_url / source
+        except json.JSONDecodeError:
+            return step6  # return plain string for fallback regex search
+    except Exception:
+        return None
+
 def main():
     args = sys.argv  # saving the cli arguments into args
 
@@ -81,6 +140,9 @@ def main():
 
 def help():
     print("Version History:")
+    print("- Version v1.7.1 (Improved bait detection)")
+    print("- Version v1.7.0 (Method 8 for source detection by @Domkeykong)")
+    print("- Version v1.6.0 (Method 7 for source detection by @ottobauer)")
     print("- Version v1.5.1 (Documentation updates: help descriptions, README usage info)")
     print("- Version v1.5.0 (Improved source detection and bait handling)")
     print("- Version v1.4.0 (Forked by MPZ-00)")
@@ -413,8 +475,9 @@ def download(URL):
                             print("[+] Found base64 encoded HLS (m3u8) URL.")
                 except Exception as e:
                     print(f"[!] Failed to decode a168c string: {e}")
-
+        
         # Method 7: Look for MKGMa encoded sources
+        # https://github.com/p4ul17/voe-dl/issues/33#issuecomment-2807006973
         if not source_json:
             print("[*] Searching for MKGMa sources...")
 
@@ -424,14 +487,28 @@ def download(URL):
             if match:
                 raw_MKGMa = match.group(1)
 
+                def rot13_decode(s: str) -> str:
+                    result = []
+                    for c in s:
+                        if 'A' <= c <= 'Z':
+                            result.append(chr((ord(c) - ord('A') + 13) % 26 + ord('A')))
+                        elif 'a' <= c <= 'z':
+                            result.append(chr((ord(c) - ord('a') + 13) % 26 + ord('a')))
+                        else:
+                            result.append(c)
+                    return ''.join(result)
+
+                def shift_characters(s: str, offset: int) -> str:
+                    return ''.join(chr(ord(c) - offset) for c in s)
+
                 try:
-                    encrypted_data = rot13(raw_MKGMa)
-                    cleaned_input = sanitize_input(encrypted_data, html_page.text)
-                    underscore_removed = cleaned_input.replace('_', '')
-                    decoded_from_base64 = base64.b64decode(underscore_removed).decode('utf-8')
-                    shifted_back = shift_back(decoded_from_base64, 3)
-                    reversed_string = shifted_back[::-1]
-                    decoded = base64.b64decode(reversed_string).decode('utf-8')
+                    step1 = rot13_decode(raw_MKGMa)
+                    step2 = step1.replace('_', '')
+                    step3 = base64.b64decode(step2).decode('utf-8')
+                    step4 = shift_characters(step3, 3)
+                    step5 = step4[::-1]
+
+                    decoded = base64.b64decode(step5).decode('utf-8')
 
                     try:
                         parsed_json = json.loads(decoded)
@@ -458,7 +535,43 @@ def download(URL):
 
                 except Exception as e:
                     print(f"[-] Error while decoding MKGMa string: {e}")
-        
+
+        # Method 8: Obfuscated JSON in <script type="application/json"> tags
+        if not source_json:
+            print("[*] Searching for obfuscated JSON sources…")
+            app_json_scripts = soup.find_all("script", attrs={"type": "application/json"})
+            for js in app_json_scripts:
+                if not js.string:
+                    continue
+                candidate = js.string.strip()
+                result = deobfuscate_embedded_json(candidate)
+                if result is None:
+                    continue
+                try:
+                    if isinstance(result, dict):
+                        if 'direct_access_url' in result:
+                            source_json = {"mp4": result['direct_access_url']}
+                            print("[+] Found direct .mp4 URL in obfuscated JSON")
+                        elif 'source' in result:
+                            source_json = {"hls": result['source']}
+                            print("[+] Found .m3u8 URL in obfuscated JSON")
+                        elif any(k in result for k in ("mp4", "hls")):
+                            source_json = result
+                            print("[+] Found media URL in obfuscated JSON")
+                    elif isinstance(result, str):
+                        mp4_m = re.search(r'(https?://[^\s"]+\.mp4[^\s"]*)', result)
+                        m3u8_m = re.search(r'(https?://[^\s"]+\.m3u8[^\s"]*)', result)
+                        if mp4_m:
+                            source_json = {"mp4": mp4_m.group(0)}
+                        elif m3u8_m:
+                            source_json = {"hls": m3u8_m.group(0)}
+                        if source_json:
+                            print("[+] Extracted media link from obfuscated JSON string")
+                except Exception as e:
+                    print(f"[!] Error parsing obfuscated JSON result: {e}")
+                if source_json:
+                    break
+
         # If we still don't have sources, try to find any iframe that might contain the video
         if not source_json:
             iframes = soup.find_all("iframe")
@@ -613,13 +726,26 @@ def delpartfiles():
     for file in glob.iglob(os.path.join(path, '*.part')):
         os.remove(file)
 
-def is_bait_source(source):
-    """Check if the given source matches any predefined bait patterns."""
-    baits = [
-        "BigBuckBunny.mp4",
-        # Add more bait patterns as needed
+def is_bait_source(source: str) -> bool:
+    """Return True if *source* looks like a known test/bait video."""
+    bait_filenames = [
+        "BigBuckBunny",
+        "Big_Buck_Bunny_1080_10s_5MB",
+        "bbb.mp4",
+        # Add more bait filenames as needed
     ]
-    return any(bait in source for bait in baits)
+    bait_domains = [
+        "test-videos.co.uk",
+        "sample-videos.com",
+        "commondatastorage.googleapis.com",
+        # Add more bait domains as needed
+    ]
+    if any(fn.lower() in source.lower() for fn in bait_filenames):
+        return True
+    parsed = urlparse(source)
+    if any(dom in parsed.netloc for dom in bait_domains):
+        return True
+    return False
 
 # Function to clean and pad base64 safely
 def clean_base64(s):
@@ -635,32 +761,5 @@ def clean_base64(s):
         print(f"[!] Invalid base64 string: {e}")
         return None
         
-# Rot13 decoding for MKGMa
-def rot13(text):
-    result = []
-    for char in text:
-        if 'A' <= char <= 'Z':
-            result.append(chr((ord(char) - ord('A') + 13) % 26 + ord('A')))
-        elif 'a' <= char <= 'z':
-            result.append(chr((ord(char) - ord('a') + 13) % 26 + ord('a')))
-        else:
-            result.append(char)
-    return ''.join(result)
-
-# Sanitize input by replacing blacklist symbols with underscores
-def sanitize_input(text, html_page):
-    blacklist_pattern = r"\[\s*'([^']+)'(?:\s*,\s*'([^']+)'){6}\s*\]"
-    match_b = re.search(blacklist_pattern, html_page, re.DOTALL)
-    blacklist = match_b.group()  if match_b else []
-    result = text
-    for symbol in blacklist:
-        pattern = re.escape(symbol)
-        result = re.sub(pattern, '_', result)
-    return result
-
-# Shift characters back by a specified amount
-def shift_back(text, amount):
-    return ''.join(chr(ord(c) - amount) for c in text)
-
 if __name__ == "__main__":
     main()
