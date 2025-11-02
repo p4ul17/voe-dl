@@ -11,6 +11,16 @@ import concurrent.futures
 import random
 import time
 from urllib.parse import urlparse
+from io import StringIO
+
+# Global flag to detect piping
+PIPED = not sys.stdout.isatty()
+
+# If stdout is being piped, redirect all print() to a StringIO buffer
+if PIPED:
+    sys.stdout_buffer = StringIO()
+    sys.stdout_real = sys.stdout
+    sys.stdout = sys.stdout_buffer
 
 # List of common user agents for rotation
 USER_AGENTS = [
@@ -185,6 +195,17 @@ def list_dl(doc, workers=4):
 
     # Remove .part files after all downloads are complete
     delpartfiles()
+
+def flush_and_restore_stdout(url):
+    """
+    Write url to stdout and flush it. Then restore the original stdout that was replaced with StringIO.
+    """
+    # Restore stdout
+    sys.stdout = sys.stdout_real
+
+    # Flush only the URL to the pipe
+    sys.stdout.write(url + "\n")
+    sys.stdout.flush()
 
 
 def download(URL):
@@ -629,6 +650,12 @@ def download(URL):
                     ext = ".mp4"
                 name = f"{basename}_SS{ext}"
 
+                # If the output is piped
+                if PIPED:
+                    flush_and_restore_stdout(link)
+                    # Exit the process, so that it does not actually download the file
+                    exit()
+
                 print(f"[*] Downloading MP4 stream: {link}")
                 ydl_opts = {
                     'outtmpl': name,
@@ -659,6 +686,12 @@ def download(URL):
                 if not ext:
                     ext = ".mp4"  # HLS streams are typically downloaded as MP4
                 name = f"{basename}_SS{ext}"
+
+                # If the output is piped
+                if PIPED:
+                    flush_and_restore_stdout(link)
+                    # Exit the process, so that it does not actually download the file
+                    exit()
 
                 print(f"[*] Downloading HLS stream: {link}")
                 ydl_opts = {
