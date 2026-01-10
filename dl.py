@@ -130,15 +130,17 @@ def main():
         print("Please use a parameter. Use -h for Help") #if not, tells the user to specify an argument
         quit()
 
-    if args[1] == "-h":     #if the first user argument is "-h" call the help function
+    if args[1] == "-h" or args[1] == "--help":     #if the first user argument is "-h" call the help function
         help()
     elif args[1] == "-u":   #if the first user argument is "-u" call the download function
         URL = args[2]
         download(URL)
-    elif args[1] == "-l":   #if the first user argument is "-l" call the list_dl (list download) function
+    elif args[1] == "-l" or args[1] == "--list-download":   #if the first user argument is "-l" call the list_dl (list download) function
         doc = args[2]
         
         if len(args) > 3 and args[3] == "-w":   #if the second user argument is "-w" set the max_workers to the value of the third argument
+            workers = int(args[4])
+        elif len(args > 3 and args[3] == "--worker": # an alternative to "-w"
             workers = int(args[4])
         else:
             workers = 4
@@ -160,10 +162,10 @@ def help():
     print("")
     print("______________")
     print("Arguments:")
-    print("-h shows this help")
+    print("-h, --help shows this help")
     print("-u <URL> downloads the <URL> you specify")
-    print("-l <doc> opens the <doc> you specify and downloads every URL line after line")
-    print("-w <number> sets the number of parallel workers for list downloads (default: 4)")
+    print("-l, --list-download <doc> opens the <doc> you specify and downloads every URL line after line")
+    print("-w, --worker <number> sets the number of parallel workers for list downloads (default: 4)")
     print("<URL> just the URL as Argument works the same as with -u Argument")
     print("______________")
     print("")
@@ -795,4 +797,5 @@ def clean_base64(s):
         return None
         
 if __name__ == "__main__":
+
     main()
