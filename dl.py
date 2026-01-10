@@ -133,7 +133,6 @@ def main():
     workers = int(4)
     doc = ""
     url = ""
-    proxy_url = ""
 
     # iterate through arguments
     i = 1 # start id is 1 because 0 is the script name
@@ -150,33 +149,13 @@ def main():
         elif args[i] == "-w":   #if the user argument is "-w" set the max_workers
             workers = int(args[i+1])
             i += 1 # make it move on two arguments
-        elif args[i] == "-p": # if the user argument is "-p" set the proxy
-            proxy_url = args[i+1]
-            i += 1 # make it move on two arguments
         elif i == len(args)-1:
             url = args[i] # define as url
         else:
             print("Unknown argument \""+args[i]+"\". Use -h for Help") # tell the user about the invalid parameter
             quit()
         i += 1 # move on to the next argument
-
-    # assign proxy to requests session
-    if proxy_url != "":
-        PROXY_URL = proxy_url # set proxy_url for yt_dlp
-
-        # set proxy_url for the requests session
-        if proxy_url.startswith("http://"):
-            session.proxies = {
-                "http": proxy_url,
-            }
-        elif proxy_url.startswith("https://"):
-            session.proxies = {
-                "https": proxy_url,
-            }
-        else:
-            print("Proxy url is invalid. Use -h for Help") # advise the user that the proxy url is invalid
-            quit()
-
+        
     if doc != "": # if doc is defined -l was specified so a download will not be started
         list_dl(doc, workers)
     else: # by default try starting to download
@@ -835,3 +814,4 @@ def clean_base64(s):
 if __name__ == "__main__":
 
     main()
+
