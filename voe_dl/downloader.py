@@ -330,6 +330,7 @@ def download(url, args, stop_event=None, visited_urls=None, redirect_depth=0):
                         'no_warnings': False,
                         'http_headers': headers,
                         'progress_hooks': [progress_hook],
+                        'proxy': args.proxy,
                     }
                     with YoutubeDL(ydl_opts) as ydl:
                         try:
@@ -386,6 +387,7 @@ def download(url, args, stop_event=None, visited_urls=None, redirect_depth=0):
                         'no_warnings': False,
                         'http_headers': headers,
                         'progress_hooks': [progress_hook],
+                        'proxy': args.proxy,
                     }
                     with YoutubeDL(ydl_opts) as ydl:
                         try:
