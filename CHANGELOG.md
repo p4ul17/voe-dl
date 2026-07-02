@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.9.0] - Modularization
+**Release Date**: 2026-08-01
+
+### Added
+- `-p`/`--proxy` flag to route requests through an HTTP/HTTPS proxy (also passed through to yt-dlp downloads), ported from @BlockyBlockling's PR #57
+- `-d`/`--output-dir` flag to specify a custom output directory for downloaded files, ported from @BlockyBlockling's PRs #59 and #63
+
+### Changed
+- Split the single `dl.py` file into a proper `voe_dl` package: each of the 8 source-detection methods now lives in its own file under `voe_dl/sources/`, with separate modules for HTTP handling, decoding helpers, bait detection, filename generation, abort/signal handling, piping, download orchestration, and the CLI.
+- Method 7's inline rot13/character-shift helpers were deduplicated to reuse the shared decoding primitives also used by Method 8, instead of redefining them.
+- Entry points repointed at the package: the `voe-dl` console script now targets `voe_dl.cli:main`, and the PyInstaller build targets `voe_dl/__main__.py`. Root `dl.py` is removed.
+- Dropped `download_file()`, a dead code path unreferenced anywhere in the project.
+
+### Fixed
+- Crash (`TypeError`) when `--output-dir` pointed at a nonexistent or invalid path, already fixed in the port (never shipped the bug that `main` had in v1.8.2/v1.8.3)
+
+### Verification
+- Behavior-preserving golden-output diffing against the pre-refactor implementation across all 8 methods, iframe fallback, no-match handling, piped output, and threaded list mode
+- PyInstaller `.exe` build re-tested against fixtures, including the ported proxy and output-dir codepaths
+
+This release supersedes `main`'s v1.8.2 and v1.8.3 (merged in below for history); everything those two shipped is included here.
+
+---
+
 ## [v1.8.3] - Output Directory Crash Fix
 **Release Date**: 2026-07-31
 

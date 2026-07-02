@@ -14,7 +14,7 @@ uv sync
 uv add --dev pyinstaller
 
 # Build the executable
-uv run pyinstaller --onefile --name=voe-dl dl.py
+uv run pyinstaller --onefile --name=voe-dl voe_dl/__main__.py
 ```
 
 This will create:

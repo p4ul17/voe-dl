@@ -57,12 +57,13 @@ A Python-based downloader for videos hosted on [voe.sx](https://voe.sx).
 
 4. **Run the script**
    ```cmd
-   uv run dl.py -u https://voe.sx/yourvideo
+   uv run voe-dl -u https://voe.sx/yourvideo
    ```
+   or equivalently: `uv run python -m voe_dl -u https://voe.sx/yourvideo`
 
 5. **See all options**
    ```cmd
-   uv run dl.py -h
+   uv run voe-dl -h
    ```
 
 > Prefer plain `pip`? `pip install .` also works, since dependencies are declared in `pyproject.toml`.
