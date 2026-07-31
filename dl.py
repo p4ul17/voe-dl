@@ -191,7 +191,7 @@ def main():
     
     # validate output directory
     if not os.path.isdir(args.output_dir):
-      print("The output directory \""+args.output_dir+"\" is not a valid folder.") # tell the user about the invalid output directory
+      print(f"The output directory \"{args.output_dir}\" is not a valid folder.") # tell the user about the invalid output directory
       quit()
     
     # assign proxy to requests session
