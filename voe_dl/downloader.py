@@ -325,7 +325,7 @@ def download(url, args, stop_event=None, visited_urls=None, redirect_depth=0):
                             raise DownloadAbortedException("Download aborted by user")
 
                     ydl_opts = {
-                        'outtmpl': name,
+                        'outtmpl': os.path.join(args.output_dir, name),
                         'quiet': False,
                         'no_warnings': False,
                         'http_headers': headers,
@@ -382,7 +382,7 @@ def download(url, args, stop_event=None, visited_urls=None, redirect_depth=0):
                             raise DownloadAbortedException("Download aborted by user")
 
                     ydl_opts = {
-                        'outtmpl': name,
+                        'outtmpl': os.path.join(args.output_dir, name),
                         'quiet': False,
                         'no_warnings': False,
                         'http_headers': headers,

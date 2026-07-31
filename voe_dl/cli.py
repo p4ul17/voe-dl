@@ -1,4 +1,6 @@
 import argparse
+import os
+import pathlib
 import signal
 import sys
 import time
@@ -12,7 +14,7 @@ from voe_dl.piping import PIPED
 def get_version_history():
     return (
         "\nVersion History:\n"
-        "- Version v1.9.0 (Modularized codebase: split dl.py into the voe_dl package, one file per source-detection method; added -p/--proxy support, ported from @BlockyBlockling)\n"
+        "- Version v1.9.0 (Modularized codebase: split dl.py into the voe_dl package, one file per source-detection method; added -p/--proxy and -d/--output-dir support, ported from @BlockyBlockling)\n"
         "- Version v1.8.1 (Piped output: print only the resolved link when stdout is piped, ported from @Czer0xx)\n"
         "- Version v1.8.0 (CLI improvements, custom filename generation, episode tagging, dry-run mode)\n"
         "- Version v1.7.1 (Improved bait detection)\n"
@@ -39,6 +41,7 @@ def parse_arguments():
     group.add_argument("-l", "--list", dest="is_list", action="store_true", help="Treat target as list file")
     parser.add_argument("-w", "--workers", type=int, default=4, help="Parallel downloads for -l (default: 4)")
     parser.add_argument("-p", "--proxy", type=str, dest="proxy", help="Specify a proxy url to use, currently only accepting http:// and https:// urls.")
+    parser.add_argument("-d", "--directoy", type=pathlib.Path, dest="output_dir", default=pathlib.Path("."), help="Specify the output directory")
     parser.add_argument("--name", help="Base name for output files (used with --numbering or placeholders)")
     parser.add_argument("--numbering", action="store_true", help="Add S01E01-style numbering based on line order")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without downloading")
@@ -51,6 +54,11 @@ def main():
     # Register signal handler once for the entire process
     signal.signal(signal.SIGINT, signal_handler)
     _global_stop_event.clear()
+
+    # validate output directory
+    if not os.path.isdir(args.output_dir):
+        print(f"The output directory \"{args.output_dir}\" is not a valid folder.")
+        quit()
 
     # assign proxy to requests session
     if args.proxy:
