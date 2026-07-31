@@ -238,6 +238,8 @@ def main():
 def get_version_history():
     return (
         "\nVersion History:\n"
+        "- Version v1.8.3 (Fixed a crash in --output-dir validation when the given path doesn't exist)\n"
+        "- Version v1.8.2 (Added -p/--proxy and -d/--output-dir support, ported from @BlockyBlockling; migrated project setup to uv)\n"
         "- Version v1.8.1 (Piped output: print only the resolved link when stdout is piped, ported from @Czer0xx)\n"
         "- Version v1.8.0 (CLI improvements, custom filename generation, episode tagging, dry-run mode)\n"
         "- Version v1.7.1 (Improved bait detection)\n"

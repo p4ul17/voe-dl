@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [v1.8.3] - Output Directory Crash Fix
+**Release Date**: 2026-07-31
+
+### Fixed
+- Crash (`TypeError`) when `--output-dir` pointed at a nonexistent or invalid path — the validation error message string-concatenated a `pathlib.Path` object instead of formatting it, which raised instead of printing the intended message
+- `pyproject.toml` version was never bumped for the v1.8.2 release; corrected here
+
+---
+
 ## [v1.8.2] - Proxy and Output Directory Support
 **Release Date**: 2026-07-02
 
